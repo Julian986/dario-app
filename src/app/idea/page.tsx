@@ -62,7 +62,7 @@ export default function IdeaPage() {
           Boceto · no es la app todavía
         </p>
         <h1 className="animate-rise-delay-1 mt-4 max-w-3xl font-[family-name:var(--font-display)] text-4xl leading-tight tracking-tight md:text-6xl">
-          Así se sentiría entrar.
+          Así se sentiría entrar
         </h1>
         <p className="animate-rise-delay-2 mt-5 max-w-2xl text-lg leading-relaxed text-[var(--muted)]">
           Una empresa, una jurisdicción, áreas claras. El técnico busca
