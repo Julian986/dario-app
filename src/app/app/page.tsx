@@ -196,7 +196,7 @@ function shortAreaName(name: string) {
 
 export default function AppPrototypePage() {
   const [areas, setAreas] = useState(initialAreas);
-  const [selectedId, setSelectedId] = useState(initialAreas[1].id);
+  const [selectedId, setSelectedId] = useState(initialAreas[0].id);
   const [query, setQuery] = useState("");
   const [filter, setFilter] = useState<Filter>("all");
   const [jurisdiction, setJurisdiction] = useState(jurisdictions[0]);
