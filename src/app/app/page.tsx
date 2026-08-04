@@ -463,7 +463,7 @@ export default function AppPrototypePage() {
         </Link>
       </div>
 
-      <header className="border-b border-[var(--ink)]/8 bg-white px-4 py-4 md:px-8">
+      <div className="border-b border-[var(--ink)]/8 bg-white px-4 py-4 md:px-8">
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div>
             <p className="font-[family-name:var(--font-display)] text-2xl tracking-tight">
@@ -498,7 +498,7 @@ export default function AppPrototypePage() {
             />
           </label>
         </div>
-      </header>
+      </div>
 
       {/* Mobile: chips sticky + detalle debajo (master-detail) */}
       <div className="lg:hidden">

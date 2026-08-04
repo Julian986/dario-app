@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useState } from "react";
+import { SiteHeader } from "@/components/SiteHeader";
 
 const prompts = [
   {
@@ -83,25 +84,7 @@ export default function ConversacionPage() {
 
   return (
     <div className="min-h-screen bg-[var(--paper)] text-[var(--ink)]">
-      <header className="flex items-center justify-between border-b border-[var(--ink)]/8 px-6 py-5 md:px-10">
-        <Link
-          href="/"
-          className="font-[family-name:var(--font-display)] text-2xl tracking-tight"
-        >
-          Ámbito
-        </Link>
-        <nav className="flex items-center gap-5 text-sm text-[var(--muted)]">
-          <Link href="/" className="transition hover:text-[var(--ink)]">
-            Inicio
-          </Link>
-          <Link href="/idea" className="transition hover:text-[var(--ink)]">
-            Idea
-          </Link>
-          <Link href="/app" className="btn-app !px-4 !py-2 text-sm">
-            Aplicación
-          </Link>
-        </nav>
-      </header>
+      <SiteHeader active="conversacion" />
 
       <main className="mx-auto max-w-3xl px-6 py-14 md:px-10 md:py-20">
         <p className="animate-rise text-sm uppercase tracking-[0.2em] text-[var(--moss)]">

@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { SiteHeader } from "@/components/SiteHeader";
 
 const pillars = [
   {
@@ -18,27 +19,9 @@ const pillars = [
 export default function Home() {
   return (
     <div className="min-h-screen bg-[var(--paper)] text-[var(--ink)]">
-      <header className="absolute inset-x-0 top-0 z-20 flex items-center justify-between px-6 py-5 md:px-10">
-        <Link
-          href="/"
-          className="font-[family-name:var(--font-display)] text-2xl tracking-tight text-[var(--mist)]"
-        >
-          Ámbito
-        </Link>
-        <nav className="flex items-center gap-5 text-sm text-[var(--mist)]/85">
-          <Link href="/idea" className="transition hover:text-white">
-            Idea
-          </Link>
-          <Link href="/conversacion" className="transition hover:text-white">
-            Conversación
-          </Link>
-          <Link href="/app" className="btn-app !px-4 !py-2 text-sm">
-            Aplicación
-          </Link>
-        </nav>
-      </header>
+      <SiteHeader active="inicio" />
 
-      <section className="relative isolate min-h-[100svh] overflow-hidden bg-[var(--ink)] text-[var(--mist)]">
+      <section className="relative isolate min-h-[calc(100svh-4.5rem)] overflow-hidden bg-[var(--ink)] text-[var(--mist)]">
         <div
           aria-hidden
           className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_20%_20%,rgba(47,107,79,0.45),transparent_45%),radial-gradient(ellipse_at_80%_70%,rgba(124,184,146,0.18),transparent_40%),linear-gradient(160deg,#0e1c16_0%,#163528_55%,#0e1c16_100%)]"
@@ -52,7 +35,7 @@ export default function Home() {
           className="pointer-events-none absolute inset-x-0 bottom-0 h-40 bg-gradient-to-t from-[var(--paper)] to-transparent"
         />
 
-        <div className="relative mx-auto flex min-h-[100svh] max-w-6xl flex-col justify-end px-6 pb-24 pt-28 md:px-10 md:pb-28">
+        <div className="relative mx-auto flex min-h-[calc(100svh-4.5rem)] max-w-6xl flex-col justify-end px-6 pb-24 pt-16 md:px-10 md:pb-28">
           <p className="animate-rise mb-4 text-sm uppercase tracking-[0.22em] text-[var(--leaf)]">
             Guía rápida · para Dario
           </p>
