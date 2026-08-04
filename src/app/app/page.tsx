@@ -201,6 +201,7 @@ export default function AppPrototypePage() {
   const [filter, setFilter] = useState<Filter>("all");
   const [jurisdiction, setJurisdiction] = useState(jurisdictions[0]);
   const [note, setNote] = useState("");
+  const [searchFocused, setSearchFocused] = useState(false);
 
   const deferredQuery = useDeferredValue(query);
   const selected = areas.find((area) => area.id === selectedId) ?? areas[0];
@@ -488,6 +489,8 @@ export default function AppPrototypePage() {
             <input
               value={query}
               onChange={(e) => setQuery(e.target.value)}
+              onFocus={() => setSearchFocused(true)}
+              onBlur={() => setSearchFocused(false)}
               placeholder="Buscar documentación…"
               className="w-full touch-manipulation rounded-full border border-[var(--ink)]/12 bg-[var(--paper)] px-4 py-2.5 text-sm outline-none focus:border-[var(--moss)]"
               autoComplete="off"
@@ -499,33 +502,42 @@ export default function AppPrototypePage() {
 
       {/* Mobile: chips sticky + detalle debajo (master-detail) */}
       <div className="lg:hidden">
-        <div className="sticky top-0 z-20 border-b border-[var(--ink)]/8 bg-white/95 px-4 py-3 backdrop-blur">
-          <p className="mb-2 text-xs uppercase tracking-[0.18em] text-[var(--muted)]">
-            Elegí un área
-          </p>
-          <div className="-mx-1 flex gap-2 overflow-x-auto px-1 pb-1">
-            {areaSummaries.map((area) => {
-              const active = area.id === selected.id;
-              return (
-                <button
-                  key={area.id}
-                  type="button"
-                  onClick={() => selectArea(area.id)}
-                  className={`touch-manipulation shrink-0 rounded-full px-4 py-2 text-sm font-medium transition ${
-                    active
-                      ? "bg-[#2563eb] text-white"
-                      : "bg-[var(--paper)] text-[var(--ink)] ring-1 ring-[var(--ink)]/10"
-                  }`}
-                >
-                  {shortAreaName(area.name)}
-                </button>
-              );
-            })}
+        {!searchFocused ? (
+          <div className="sticky top-0 z-20 mt-3 border-b border-[var(--ink)]/8 bg-white/95 px-4 pb-4 pt-4 backdrop-blur">
+            <p className="mb-3 text-xs uppercase tracking-[0.18em] text-[var(--muted)]">
+              Elegí un área
+            </p>
+            <div className="-mx-1 flex gap-2 overflow-x-auto px-1 pb-2">
+              {areaSummaries.map((area) => {
+                const active = area.id === selected.id;
+                return (
+                  <button
+                    key={area.id}
+                    type="button"
+                    onClick={() => selectArea(area.id)}
+                    className={`touch-manipulation shrink-0 rounded-full px-4 py-2 text-sm font-medium transition ${
+                      active
+                        ? "bg-[#2563eb] text-white"
+                        : "bg-[var(--paper)] text-[var(--ink)] ring-1 ring-[var(--ink)]/10"
+                    }`}
+                  >
+                    {shortAreaName(area.name)}
+                  </button>
+                );
+              })}
+            </div>
+            <p className={`mt-3 text-xs ${toneClass(selectedTone)}`}>
+              {selected.name}: {selectedLabel}
+            </p>
           </div>
-          <p className={`mt-2 text-xs ${toneClass(selectedTone)}`}>
-            {selected.name}: {selectedLabel}
-          </p>
-        </div>
+        ) : (
+          <div className="border-b border-[var(--ink)]/8 bg-white px-4 py-3">
+            <p className="text-xs text-[var(--muted)]">
+              Buscando en {selected.name}
+              {query.trim() ? ` · “${query.trim()}”` : ""}
+            </p>
+          </div>
+        )}
 
         <div className="px-4 py-6">{docsBlock}</div>
 
