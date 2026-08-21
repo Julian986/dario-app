@@ -2,221 +2,52 @@
 
 import Link from "next/link";
 import { useDeferredValue, useMemo, useState } from "react";
-
-type DocStatus = "ok" | "warn" | "missing";
-type Filter = "all" | DocStatus;
-
-type Doc = {
-  id: string;
-  name: string;
-  status: DocStatus;
-  detail: string;
-};
-
-type CheckItem = { id: string; label: string; done: boolean };
-
-type Area = {
-  id: string;
-  name: string;
-  docs: Doc[];
-  checklist: CheckItem[];
-};
-
-const initialAreas: Area[] = [
-  {
-    id: "asimilables",
-    name: "Residuos asimilables",
-    docs: [
-      {
-        id: "a-d1",
-        name: "Contrato con transportista",
-        status: "ok",
-        detail: "Vigente hasta 14/11/2026",
-      },
-      {
-        id: "a-d2",
-        name: "Registro de generación mensual",
-        status: "ok",
-        detail: "Última carga: julio 2026",
-      },
-      {
-        id: "a-d3",
-        name: "Constancia de disposición final",
-        status: "ok",
-        detail: "Archivado",
-      },
-    ],
-    checklist: [
-      { id: "a1", label: "Alta municipal", done: true },
-      { id: "a2", label: "Contrato de recolección", done: true },
-      { id: "a3", label: "Registro interno de volúmenes", done: true },
-    ],
-  },
-  {
-    id: "peligrosos",
-    name: "Residuos peligrosos",
-    docs: [
-      {
-        id: "p-d1",
-        name: "Inscripción provincial",
-        status: "warn",
-        detail: "Vence el 15/08/2026",
-      },
-      {
-        id: "p-d2",
-        name: "Manifiesto de transporte",
-        status: "ok",
-        detail: "Último: 22/07/2026",
-      },
-      {
-        id: "p-d3",
-        name: "Plan de gestión",
-        status: "ok",
-        detail: "Revisión anual OK",
-      },
-      {
-        id: "p-d4",
-        name: "Declaración jurada anual",
-        status: "missing",
-        detail: "Pendiente de carga",
-      },
-    ],
-    checklist: [
-      { id: "p1", label: "Inscripción provincial vigente", done: true },
-      { id: "p2", label: "Manifiesto de transporte", done: true },
-      { id: "p3", label: "Declaración jurada anual", done: false },
-      { id: "p4", label: "Plan de gestión actualizado", done: true },
-    ],
-  },
-  {
-    id: "efluentes",
-    name: "Efluentes líquidos",
-    docs: [
-      {
-        id: "e-d1",
-        name: "Permiso de vuelco",
-        status: "ok",
-        detail: "Vigente",
-      },
-      {
-        id: "e-d2",
-        name: "Análisis de laboratorio",
-        status: "ok",
-        detail: "Último: 03/06/2026",
-      },
-      {
-        id: "e-d3",
-        name: "Normativa municipal aplicable",
-        status: "missing",
-        detail: "Sin documento cargado",
-      },
-    ],
-    checklist: [
-      { id: "e1", label: "Permiso de vuelco", done: true },
-      { id: "e2", label: "Monitoreo periódico", done: true },
-      { id: "e3", label: "Normativa municipal cargada", done: false },
-    ],
-  },
-  {
-    id: "emisiones",
-    name: "Emisiones gaseosas",
-    docs: [
-      {
-        id: "g-d1",
-        name: "Monitoreo de chimeneas",
-        status: "ok",
-        detail: "Último: 18/05/2026",
-      },
-      {
-        id: "g-d2",
-        name: "Informe de emisiones",
-        status: "ok",
-        detail: "Presentado",
-      },
-    ],
-    checklist: [
-      { id: "g1", label: "Habilitación de fuentes", done: true },
-      { id: "g2", label: "Informe anual", done: true },
-    ],
-  },
-];
-
-const jurisdictions = [
-  "Córdoba · Municipal Córdoba",
-  "Buenos Aires · AMBA / ACUMAR",
-  "Nacional · Provincial + Municipal",
-];
-
-function deriveAreaTone(area: Area): DocStatus {
-  const pending = area.checklist.filter((item) => !item.done).length;
-  const hasMissingDoc = area.docs.some((doc) => doc.status === "missing");
-  const hasWarnDoc = area.docs.some((doc) => doc.status === "warn");
-  if (pending > 0 || hasMissingDoc) return "missing";
-  if (hasWarnDoc) return "warn";
-  return "ok";
-}
-
-function deriveAreaLabel(area: Area): string {
-  const pending = area.checklist.filter((item) => !item.done).length;
-  const warnDocs = area.docs.filter((doc) => doc.status === "warn").length;
-  const missingDocs = area.docs.filter((doc) => doc.status === "missing").length;
-
-  if (pending > 0) {
-    return pending === 1 ? "Falta 1 ítem" : `Faltan ${pending} ítems`;
-  }
-  if (missingDocs > 0) {
-    return missingDocs === 1 ? "Falta 1 norma" : `Faltan ${missingDocs} normas`;
-  }
-  if (warnDocs > 0) {
-    return warnDocs === 1 ? "1 por vencer" : `${warnDocs} por vencer`;
-  }
-  return "Al día";
-}
-
-function toneClass(tone: DocStatus) {
-  if (tone === "ok") return "text-[var(--moss)]";
-  return "text-[var(--alert)]";
-}
-
-function statusBadge(status: DocStatus) {
-  if (status === "ok") return "Al día";
-  if (status === "warn") return "Por vencer";
-  return "Falta";
-}
-
-function nextDocStatus(status: DocStatus): DocStatus {
-  if (status === "ok") return "warn";
-  if (status === "warn") return "missing";
-  return "ok";
-}
-
-function shortAreaName(name: string) {
-  return name.replace("Residuos ", "").replace(" líquidos", "").replace(" gaseosas", "");
-}
+import { AreaProgressBar } from "./ProgressBar";
+import {
+  areaProgressPercent,
+  deriveAreaLabel,
+  deriveAreaTone,
+  enablingYears,
+  industryTypes,
+  initialAreas,
+  locations,
+  nextDocStatus,
+  shortAreaName,
+  statusBadge,
+  toneClass,
+  type Filter,
+} from "./data";
 
 export default function AppPrototypePage() {
   const [areas, setAreas] = useState(initialAreas);
   const [selectedId, setSelectedId] = useState(initialAreas[0].id);
+  const [subId, setSubId] = useState(initialAreas[0].subAreas[0].id);
   const [query, setQuery] = useState("");
   const [filter, setFilter] = useState<Filter>("all");
-  const [jurisdiction, setJurisdiction] = useState(jurisdictions[0]);
+  const [industry, setIndustry] = useState(industryTypes[0]);
+  const [location, setLocation] = useState(locations[0]);
+  const [enablingYear, setEnablingYear] = useState(enablingYears[3]);
   const [note, setNote] = useState("");
   const [searchFocused, setSearchFocused] = useState(false);
 
   const deferredQuery = useDeferredValue(query);
   const selected = areas.find((area) => area.id === selectedId) ?? areas[0];
+  const selectedSub =
+    selected.subAreas.find((sub) => sub.id === subId) ?? selected.subAreas[0];
   const selectedTone = deriveAreaTone(selected);
   const selectedLabel = deriveAreaLabel(selected);
+  const areaPercent = areaProgressPercent(selected);
+  const isLegal = selected.kind === "legal";
 
-  const checklistDone = selected.checklist.filter((item) => item.done).length;
-  const checklistTotal = selected.checklist.length;
-  const progress = checklistTotal
+  const checklistDone = selectedSub.checklist.filter((item) => item.done).length;
+  const checklistTotal = selectedSub.checklist.length;
+  const subProgress = checklistTotal
     ? Math.round((checklistDone / checklistTotal) * 100)
     : 0;
 
   const filteredDocs = useMemo(() => {
     const q = deferredQuery.trim().toLowerCase();
-    return selected.docs.filter((doc) => {
+    return selectedSub.docs.filter((doc) => {
       const matchesQuery =
         !q ||
         doc.name.toLowerCase().includes(q) ||
@@ -224,7 +55,7 @@ export default function AppPrototypePage() {
       const matchesFilter = filter === "all" || doc.status === filter;
       return matchesQuery && matchesFilter;
     });
-  }, [deferredQuery, filter, selected.docs]);
+  }, [deferredQuery, filter, selectedSub.docs]);
 
   const areaSummaries = useMemo(
     () =>
@@ -237,7 +68,16 @@ export default function AppPrototypePage() {
   );
 
   function selectArea(id: string) {
+    const next = areas.find((area) => area.id === id) ?? areas[0];
     setSelectedId(id);
+    setSubId(next.subAreas[0].id);
+    setQuery("");
+    setFilter("all");
+    setNote("");
+  }
+
+  function selectSub(id: string) {
+    setSubId(id);
     setQuery("");
     setFilter("all");
     setNote("");
@@ -250,8 +90,17 @@ export default function AppPrototypePage() {
           ? area
           : {
               ...area,
-              checklist: area.checklist.map((item) =>
-                item.id === checkId ? { ...item, done: !item.done } : item,
+              subAreas: area.subAreas.map((sub) =>
+                sub.id !== selectedSub.id
+                  ? sub
+                  : {
+                      ...sub,
+                      checklist: sub.checklist.map((item) =>
+                        item.id === checkId
+                          ? { ...item, done: !item.done }
+                          : item,
+                      ),
+                    },
               ),
             },
       ),
@@ -265,15 +114,49 @@ export default function AppPrototypePage() {
           ? area
           : {
               ...area,
-              docs: area.docs.map((doc) =>
-                doc.id === docId
-                  ? { ...doc, status: nextDocStatus(doc.status) }
-                  : doc,
+              subAreas: area.subAreas.map((sub) =>
+                sub.id !== selectedSub.id
+                  ? sub
+                  : {
+                      ...sub,
+                      docs: sub.docs.map((doc) =>
+                        doc.id === docId
+                          ? { ...doc, status: nextDocStatus(doc.status) }
+                          : doc,
+                      ),
+                    },
               ),
             },
       ),
     );
   }
+
+  const subChips = (
+    <div>
+      <p className="mb-2 text-xs uppercase tracking-[0.18em] text-[var(--muted)]">
+        Temas de {selected.name}
+      </p>
+      <div className="-mx-1 flex gap-2 overflow-x-auto px-1 pb-1">
+        {selected.subAreas.map((sub) => {
+          const active = sub.id === selectedSub.id;
+          return (
+            <button
+              key={sub.id}
+              type="button"
+              onClick={() => selectSub(sub.id)}
+              className={`touch-manipulation shrink-0 rounded-full px-3 py-1.5 text-sm font-medium transition ${
+                active
+                  ? "bg-[var(--ink)] text-white"
+                  : "bg-white text-[var(--ink)] ring-1 ring-[var(--ink)]/10"
+              }`}
+            >
+              {sub.name}
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
 
   const areaList = (
     <ul className="space-y-1">
@@ -303,20 +186,32 @@ export default function AppPrototypePage() {
 
   const docsBlock = (
     <>
-      <div className="flex flex-wrap items-end justify-between gap-3">
-        <div>
-          <h1 className="font-[family-name:var(--font-display)] text-3xl tracking-tight md:text-4xl">
-            {selected.name}
-          </h1>
+      <div className="flex flex-wrap items-end justify-between gap-4">
+        <div className="min-w-0 flex-1">
+          <div className="flex flex-wrap items-center gap-x-6 gap-y-3">
+            <h1 className="font-[family-name:var(--font-display)] text-3xl tracking-tight md:text-4xl">
+              {selected.name}
+            </h1>
+            <AreaProgressBar percent={areaPercent} />
+          </div>
           <p className={`mt-2 text-sm ${toneClass(selectedTone)}`}>
-            {selectedLabel} · {jurisdiction}
+            {selectedLabel} · {industry} · {location} · {enablingYear}
+            {isLegal ? " · vínculo con Boletín Oficial" : ""}
           </p>
         </div>
         <p className="text-sm text-[var(--muted)]">
-          {filteredDocs.length} documento
-          {filteredDocs.length === 1 ? "" : "s"}
+          {filteredDocs.length}{" "}
+          {isLegal
+            ? filteredDocs.length === 1
+              ? "norma"
+              : "normas"
+            : filteredDocs.length === 1
+              ? "documento"
+              : "documentos"}
         </p>
       </div>
+
+      <div className="mt-5">{subChips}</div>
 
       <div className="mt-5 flex flex-wrap gap-2">
         {(
@@ -349,9 +244,19 @@ export default function AppPrototypePage() {
             className="rounded-2xl border border-[var(--ink)]/8 bg-white px-4 py-4"
           >
             <div className="flex flex-wrap items-start justify-between gap-3">
-              <div>
+              <div className="min-w-0">
                 <p className="font-medium">{doc.name}</p>
                 <p className="mt-1 text-sm text-[var(--muted)]">{doc.detail}</p>
+                {doc.href ? (
+                  <a
+                    href={doc.href}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="mt-2 inline-block text-sm font-medium text-[#2563eb] underline underline-offset-2"
+                  >
+                    Ver en Boletín Oficial
+                  </a>
+                ) : null}
               </div>
               <button
                 type="button"
@@ -369,7 +274,7 @@ export default function AppPrototypePage() {
         ))}
         {filteredDocs.length === 0 && (
           <li className="rounded-2xl border border-dashed border-[var(--ink)]/15 px-4 py-10 text-center text-sm text-[var(--muted)]">
-            No hay documentos con estos filtros.
+            No hay {isLegal ? "normas" : "documentos"} con estos filtros.
           </li>
         )}
       </ul>
@@ -402,7 +307,7 @@ export default function AppPrototypePage() {
         Para avanzar
       </h2>
       <p className="mt-2 text-sm text-[var(--muted)]">
-        Checklist de {selected.name}. Tocá para marcar.
+        Checklist de {selectedSub.name}. Tocá para marcar.
       </p>
 
       <div className="mt-5">
@@ -410,18 +315,18 @@ export default function AppPrototypePage() {
           <span>
             {checklistDone}/{checklistTotal} completados
           </span>
-          <span className="font-medium text-[var(--ink)]">{progress}%</span>
+          <span className="font-medium text-[var(--ink)]">{subProgress}%</span>
         </div>
         <div className="h-2 overflow-hidden rounded-full bg-white/70">
           <div
             className="h-full rounded-full bg-[var(--moss)] transition-all duration-300"
-            style={{ width: `${progress}%` }}
+            style={{ width: `${subProgress}%` }}
           />
         </div>
       </div>
 
       <ul className="mt-6 space-y-3">
-        {selected.checklist.map((item) => (
+        {selectedSub.checklist.map((item) => (
           <li key={item.id}>
             <button
               type="button"
@@ -464,27 +369,71 @@ export default function AppPrototypePage() {
       </div>
 
       <div className="border-b border-[var(--ink)]/8 bg-white px-4 py-4 md:px-8">
-        <div className="flex flex-wrap items-start justify-between gap-4">
-          <div>
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+          <div className="min-w-0 flex-1">
             <p className="font-[family-name:var(--font-display)] text-2xl tracking-tight">
               Ámbito
             </p>
-            <label className="mt-1 block text-sm text-[var(--muted)]">
-              <span className="sr-only">Jurisdicción</span>
-              <select
-                value={jurisdiction}
-                onChange={(e) => setJurisdiction(e.target.value)}
-                className="mt-1 max-w-full touch-manipulation rounded-lg border border-[var(--ink)]/12 bg-[var(--paper)] px-2 py-1.5 text-sm text-[var(--ink)] outline-none"
-              >
-                {jurisdictions.map((item) => (
-                  <option key={item} value={item}>
-                    Planta ejemplo S.A. · {item}
-                  </option>
-                ))}
-              </select>
-            </label>
+            <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
+              <label className="block text-xs text-[var(--muted)]">
+                Tipo de industria
+                <select
+                  value={industry}
+                  onChange={(e) => setIndustry(e.target.value)}
+                  className="mt-1 w-full touch-manipulation rounded-lg border border-[var(--ink)]/12 bg-[var(--paper)] px-2 py-1.5 text-sm text-[var(--ink)] outline-none"
+                >
+                  {industryTypes.map((item) => (
+                    <option key={item} value={item}>
+                      {item}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label className="block text-xs text-[var(--muted)]">
+                Provincia y municipio
+                <select
+                  value={location}
+                  onChange={(e) => setLocation(e.target.value)}
+                  className="mt-1 w-full touch-manipulation rounded-lg border border-[var(--ink)]/12 bg-[var(--paper)] px-2 py-1.5 text-sm text-[var(--ink)] outline-none"
+                >
+                  {locations.map((item) => (
+                    <option key={item} value={item}>
+                      {item}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label className="block text-xs text-[var(--muted)]">
+                Año habilitante
+                <select
+                  value={enablingYear}
+                  onChange={(e) => setEnablingYear(e.target.value)}
+                  className="mt-1 w-full touch-manipulation rounded-lg border border-[var(--ink)]/12 bg-[var(--paper)] px-2 py-1.5 text-sm text-[var(--ink)] outline-none"
+                >
+                  {enablingYears.map((item) => (
+                    <option key={item} value={item}>
+                      {item}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label className="block text-xs text-[var(--muted)]">
+                Tema de gestión
+                <select
+                  value={selectedId}
+                  onChange={(e) => selectArea(e.target.value)}
+                  className="mt-1 w-full touch-manipulation rounded-lg border border-[var(--ink)]/12 bg-[var(--paper)] px-2 py-1.5 text-sm text-[var(--ink)] outline-none"
+                >
+                  {areas.map((area) => (
+                    <option key={area.id} value={area.id}>
+                      {area.name}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            </div>
           </div>
-          <label className="w-full max-w-md md:w-80">
+          <label className="w-full max-w-md lg:w-72">
             <span className="sr-only">Buscar documentación</span>
             <input
               value={query}
@@ -500,14 +449,13 @@ export default function AppPrototypePage() {
         </div>
       </div>
 
-      {/* Mobile: chips sticky + detalle debajo (master-detail) */}
       <div className="lg:hidden">
         {!searchFocused ? (
-          <div className="sticky top-0 z-20 mt-3 border-b border-[var(--ink)]/8 bg-white/95 px-4 pb-4 pt-4 backdrop-blur">
-            <p className="mb-3 text-xs uppercase tracking-[0.18em] text-[var(--muted)]">
+          <div className="sticky top-0 z-20 mt-5 border-b border-[var(--ink)]/8 bg-white/95 px-4 pb-4 pt-5 backdrop-blur">
+            <p className="mb-4 text-xs uppercase tracking-[0.18em] text-[var(--muted)]">
               Elegí un área
             </p>
-            <div className="-mx-1 flex gap-2 overflow-x-auto px-1 pb-2">
+            <div className="-mx-1 flex gap-2 overflow-x-auto px-1 pb-2 pt-1">
               {areaSummaries.map((area) => {
                 const active = area.id === selected.id;
                 return (
@@ -533,7 +481,7 @@ export default function AppPrototypePage() {
         ) : (
           <div className="border-b border-[var(--ink)]/8 bg-white px-4 py-3">
             <p className="text-xs text-[var(--muted)]">
-              Buscando en {selected.name}
+              Buscando en {selectedSub.name}
               {query.trim() ? ` · “${query.trim()}”` : ""}
             </p>
           </div>
@@ -546,7 +494,6 @@ export default function AppPrototypePage() {
         </div>
       </div>
 
-      {/* Desktop: 3 columnas */}
       <div className="mx-auto hidden max-w-6xl grid-cols-[240px_1fr_280px] lg:grid">
         <aside className="min-h-[calc(100vh-8rem)] border-r border-[var(--ink)]/8 bg-white px-4 py-5">
           <p className="mb-3 text-xs uppercase tracking-[0.18em] text-[var(--muted)]">

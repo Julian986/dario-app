@@ -26,6 +26,12 @@ const areas = [
     status: "Al día",
     tone: "ok",
   },
+  {
+    name: "Legal / Jurídica",
+    docs: 4,
+    status: "Vínculo al Boletín Oficial",
+    tone: "warn",
+  },
 ];
 
 const checklist = [

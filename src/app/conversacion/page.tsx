@@ -55,6 +55,11 @@ const prompts = [
     q: "Si tuviéramos que mostrar una sola cosa en el próximo envío, ¿cuál sería?",
     hint: "Ej.: búsqueda de un documento, checklist por jurisdicción, alertas de vencimiento, carga por la consultora…",
   },
+  {
+    n: "11",
+    q: "Sobre Legal / Jurídica y el Boletín Oficial: ¿carga manual, alertas de cambios, o integración real?",
+    hint: "En este envío hay normas de ejemplo con enlace al BO. El próximo paso puede ser carga a mano, avisos cuando cambia una norma, o conectar de verdad.",
+  },
 ];
 
 function buildCopyText() {
