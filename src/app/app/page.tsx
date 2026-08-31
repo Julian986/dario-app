@@ -1,25 +1,38 @@
 "use client";
 
 import Link from "next/link";
-import { useDeferredValue, useMemo, useState } from "react";
+import { useDeferredValue, useEffect, useMemo, useState } from "react";
 import { AreaProgressBar } from "./ProgressBar";
+import { UploadModal, type UploadResult } from "./UploadModal";
 import {
+  enablingYears,
   areaProgressPercent,
   deriveAreaLabel,
   deriveAreaTone,
-  enablingYears,
+  formatDocTitle,
   industryTypes,
   initialAreas,
   locations,
   nextDocStatus,
+  nextSequenceForArea,
   shortAreaName,
   statusBadge,
   toneClass,
+  type Area,
+  type Doc,
   type Filter,
 } from "./data";
+import { downloadDataUrl, loadAreas, saveAreas } from "./storage";
+
+type SessionFile = { dataUrl: string; name: string; mime: string };
+
+type ModalState =
+  | { open: false }
+  | { open: true; mode: "create" | "attach"; doc?: Doc };
 
 export default function AppPrototypePage() {
-  const [areas, setAreas] = useState(initialAreas);
+  const [areas, setAreas] = useState<Area[]>(initialAreas);
+  const [hydrated, setHydrated] = useState(false);
   const [selectedId, setSelectedId] = useState(initialAreas[0].id);
   const [subId, setSubId] = useState(initialAreas[0].subAreas[0].id);
   const [query, setQuery] = useState("");
@@ -29,6 +42,24 @@ export default function AppPrototypePage() {
   const [enablingYear, setEnablingYear] = useState(enablingYears[3]);
   const [note, setNote] = useState("");
   const [searchFocused, setSearchFocused] = useState(false);
+  const [sessionFiles, setSessionFiles] = useState<Record<string, SessionFile>>(
+    {},
+  );
+  const [banner, setBanner] = useState("");
+  const [modal, setModal] = useState<ModalState>({ open: false });
+
+  useEffect(() => {
+    const loaded = loadAreas();
+    setAreas(loaded);
+    setSelectedId(loaded[0]?.id ?? initialAreas[0].id);
+    setSubId(loaded[0]?.subAreas[0]?.id ?? initialAreas[0].subAreas[0].id);
+    setHydrated(true);
+  }, []);
+
+  useEffect(() => {
+    if (!hydrated) return;
+    saveAreas(areas);
+  }, [areas, hydrated]);
 
   const deferredQuery = useDeferredValue(query);
   const selected = areas.find((area) => area.id === selectedId) ?? areas[0];
@@ -38,6 +69,7 @@ export default function AppPrototypePage() {
   const selectedLabel = deriveAreaLabel(selected);
   const areaPercent = areaProgressPercent(selected);
   const isLegal = selected.kind === "legal";
+  const sequence = nextSequenceForArea(selected);
 
   const checklistDone = selectedSub.checklist.filter((item) => item.done).length;
   const checklistTotal = selectedSub.checklist.length;
@@ -48,10 +80,8 @@ export default function AppPrototypePage() {
   const filteredDocs = useMemo(() => {
     const q = deferredQuery.trim().toLowerCase();
     return selectedSub.docs.filter((doc) => {
-      const matchesQuery =
-        !q ||
-        doc.name.toLowerCase().includes(q) ||
-        doc.detail.toLowerCase().includes(q);
+      const haystack = `${doc.name} ${doc.detail} ${doc.code ?? ""}`.toLowerCase();
+      const matchesQuery = !q || haystack.includes(q);
       const matchesFilter = filter === "all" || doc.status === filter;
       return matchesQuery && matchesFilter;
     });
@@ -129,6 +159,64 @@ export default function AppPrototypePage() {
             },
       ),
     );
+  }
+
+  function upsertDoc(result: UploadResult) {
+    const { doc, targetSubId, sessionFile, largeFileWarning } = result;
+
+    setAreas((prev) =>
+      prev.map((area) => {
+        if (area.id !== selected.id) return area;
+
+        const withoutDoc: Area = {
+          ...area,
+          subAreas: area.subAreas.map((sub) => ({
+            ...sub,
+            docs: sub.docs.filter((d) => d.id !== doc.id),
+          })),
+        };
+
+        return {
+          ...withoutDoc,
+          subAreas: withoutDoc.subAreas.map((sub) =>
+            sub.id !== targetSubId
+              ? sub
+              : { ...sub, docs: [doc, ...sub.docs.filter((d) => d.id !== doc.id)] },
+          ),
+        };
+      }),
+    );
+
+    if (sessionFile) {
+      setSessionFiles((prev) => ({ ...prev, [doc.id]: sessionFile }));
+    }
+
+    setSubId(targetSubId);
+
+    if (largeFileWarning) {
+      setBanner(
+        "Archivo grande: en este prototipo se puede descargar en esta sesión, pero no se guarda el binario al recargar.",
+      );
+    } else {
+      setBanner("Documento guardado.");
+    }
+    window.setTimeout(() => setBanner(""), 4500);
+  }
+
+  function downloadDoc(doc: Doc) {
+    const session = sessionFiles[doc.id];
+    const dataUrl = doc.fileData || session?.dataUrl;
+    const name = doc.fileName || session?.name || "documento";
+    if (!dataUrl) {
+      setBanner("Este ítem aún no tiene archivo adjunto.");
+      window.setTimeout(() => setBanner(""), 3000);
+      return;
+    }
+    downloadDataUrl(dataUrl, name);
+  }
+
+  function hasFile(doc: Doc) {
+    return Boolean(doc.fileData || sessionFiles[doc.id] || doc.fileName);
   }
 
   const subChips = (
@@ -213,7 +301,7 @@ export default function AppPrototypePage() {
 
       <div className="mt-5">{subChips}</div>
 
-      <div className="mt-5 flex flex-wrap gap-2">
+      <div className="mt-5 flex flex-wrap items-center gap-2">
         {(
           [
             ["all", "Todos"],
@@ -235,7 +323,20 @@ export default function AppPrototypePage() {
             {label}
           </button>
         ))}
+        <button
+          type="button"
+          onClick={() => setModal({ open: true, mode: "create" })}
+          className="btn-app !px-3 !py-1.5 !text-xs !shadow-none"
+        >
+          Subir documento
+        </button>
       </div>
+
+      {banner ? (
+        <p className="mt-4 rounded-xl bg-[var(--mist)] px-3 py-2 text-sm text-[var(--ink)]">
+          {banner}
+        </p>
+      ) : null}
 
       <ul className="mt-6 space-y-3">
         {filteredDocs.map((doc) => (
@@ -246,7 +347,22 @@ export default function AppPrototypePage() {
             <div className="flex flex-wrap items-start justify-between gap-3">
               <div className="min-w-0">
                 <p className="font-medium">{doc.name}</p>
+                {doc.code ? (
+                  <p className="mt-1 font-mono text-xs text-[var(--moss)]">
+                    {formatDocTitle(doc)}
+                  </p>
+                ) : null}
                 <p className="mt-1 text-sm text-[var(--muted)]">{doc.detail}</p>
+                {doc.fileName ? (
+                  <p className="mt-1 text-xs text-[var(--muted)]">
+                    Adjunto: {doc.fileName}
+                    {!doc.fileData && sessionFiles[doc.id]
+                      ? " (sesión)"
+                      : !doc.fileData && doc.fileName
+                        ? " (solo nombre en este prototipo)"
+                        : ""}
+                  </p>
+                ) : null}
                 {doc.href ? (
                   <a
                     href={doc.href}
@@ -257,6 +373,25 @@ export default function AppPrototypePage() {
                     Ver en Boletín Oficial
                   </a>
                 ) : null}
+                <div className="mt-3 flex flex-wrap gap-2">
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setModal({ open: true, mode: "attach", doc })
+                    }
+                    className="touch-manipulation rounded-full bg-[var(--paper)] px-3 py-1.5 text-xs font-medium ring-1 ring-[var(--ink)]/10"
+                  >
+                    {hasFile(doc) ? "Reemplazar archivo" : "Adjuntar archivo"}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => downloadDoc(doc)}
+                    disabled={!hasFile(doc)}
+                    className="touch-manipulation rounded-full bg-[#2563eb]/10 px-3 py-1.5 text-xs font-medium text-[#2563eb] disabled:opacity-40"
+                  >
+                    Descargar
+                  </button>
+                </div>
               </div>
               <button
                 type="button"
@@ -508,6 +643,24 @@ export default function AppPrototypePage() {
           {checkBlock}
         </aside>
       </div>
+
+      {modal.open ? (
+        <UploadModal
+          open
+          mode={modal.mode}
+          area={selected}
+          subAreas={selected.subAreas}
+          defaultSubId={selectedSub.id}
+          existingDoc={modal.doc}
+          sequence={
+            modal.mode === "attach" && modal.doc?.code
+              ? Number(modal.doc.code.split("-")[2]?.split("/")[0]) || sequence
+              : sequence
+          }
+          onClose={() => setModal({ open: false })}
+          onSave={upsertDoc}
+        />
+      ) : null}
     </div>
   );
 }

@@ -1,5 +1,6 @@
 export type DocStatus = "ok" | "warn" | "missing";
 export type Filter = "all" | DocStatus;
+export type DocKind = "D" | "R" | "P";
 
 export type Doc = {
   id: string;
@@ -7,6 +8,18 @@ export type Doc = {
   status: DocStatus;
   detail: string;
   href?: string;
+  docKind?: DocKind;
+  code?: string;
+  version?: string;
+  ingresoDate?: string;
+  documentDate?: string;
+  updateDate?: string;
+  tecnico?: string;
+  firmante?: string;
+  hasExpediente?: boolean;
+  fileName?: string;
+  fileMime?: string;
+  fileData?: string;
 };
 
 export type CheckItem = { id: string; label: string; done: boolean };
@@ -361,6 +374,61 @@ export function shortAreaName(name: string) {
     .replace(" líquidos", "")
     .replace(" gaseosas", "");
   return short.charAt(0).toUpperCase() + short.slice(1);
+}
+
+export const areaCodes: Record<string, string> = {
+  asimilables: "ASI",
+  peligrosos: "PEL",
+  efluentes: "EFL",
+  emisiones: "EMI",
+  legal: "LEG",
+};
+
+export const docKindLabels: Record<DocKind, string> = {
+  D: "Documento",
+  R: "Registro",
+  P: "Procedimiento",
+};
+
+export const ACCEPT_FILES =
+  ".pdf,.doc,.docx,.xls,.xlsx,.png,.jpg,.jpeg,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,image/png,image/jpeg";
+
+export const MAX_PERSIST_BYTES = 1.5 * 1024 * 1024;
+
+export function todayISO() {
+  return new Date().toISOString().slice(0, 10);
+}
+
+/** /0125 = mes (01) + año (25) */
+export function monthYearCode(dateISO: string) {
+  const d = new Date(`${dateISO}T12:00:00`);
+  if (Number.isNaN(d.getTime())) return "0100";
+  const mm = String(d.getMonth() + 1).padStart(2, "0");
+  const yy = String(d.getFullYear()).slice(-2);
+  return `${mm}${yy}`;
+}
+
+export function buildDocCode(opts: {
+  kind: DocKind;
+  areaCode: string;
+  sequence: number;
+  dateISO: string;
+}) {
+  const seq = String(opts.sequence).padStart(3, "0");
+  const my = monthYearCode(opts.dateISO);
+  return `${opts.kind}-${opts.areaCode}-${seq}/${my}`;
+}
+
+export function nextSequenceForArea(area: Area): number {
+  const count = area.subAreas.reduce((n, sub) => n + sub.docs.length, 0);
+  return count + 1;
+}
+
+export function formatDocTitle(doc: Doc) {
+  if (doc.code) {
+    return `${doc.code} ${doc.version ?? "vers.0"}`;
+  }
+  return doc.name;
 }
 
 export function nextDocStatus(status: DocStatus): DocStatus {
