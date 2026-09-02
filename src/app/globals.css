@@ -161,6 +161,25 @@ select {
   transform: translateY(-1px);
 }
 
+.btn-leaf {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 9999px;
+  background: var(--leaf);
+  color: #0a1611;
+  font-weight: 700;
+  padding: 0.75rem 1.5rem;
+  box-shadow: 0 8px 28px rgba(124, 184, 146, 0.35);
+  transition: background-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+}
+
+.btn-leaf:hover {
+  background: #9fd0b0;
+  box-shadow: 0 10px 32px rgba(124, 184, 146, 0.45);
+  transform: translateY(-1px);
+}
+
 .btn-nav {
   display: inline-flex;
   align-items: center;

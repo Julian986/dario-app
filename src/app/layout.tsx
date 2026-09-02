@@ -14,9 +14,9 @@ const body = Manrope({
 });
 
 export const metadata: Metadata = {
-  title: "Ámbito",
+  title: "Ámbito — documentación ambiental bajo control",
   description:
-    "Sistema online para ordenar documentación ambiental por jurisdicción y área.",
+    "Ordená requisitos ambientales por jurisdicción y área. Para empresas, auditores, directores técnicos y consultoras.",
 };
 
 export default function RootLayout({
