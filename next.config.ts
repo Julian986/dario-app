@@ -9,6 +9,12 @@ const nextConfig: NextConfig = {
   turbopack: {
     root: projectRoot,
   },
+  async redirects() {
+    return [
+      { source: "/idea", destination: "/app", permanent: false },
+      { source: "/conversacion", destination: "/app", permanent: false },
+    ];
+  },
 };
 
 export default nextConfig;

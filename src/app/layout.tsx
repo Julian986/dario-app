@@ -14,9 +14,9 @@ const body = Manrope({
 });
 
 export const metadata: Metadata = {
-  title: "Ámbito — idea inicial",
+  title: "Ámbito",
   description:
-    "Idea inicial de un sistema online para ordenar documentación ambiental por jurisdicción y área.",
+    "Sistema online para ordenar documentación ambiental por jurisdicción y área.",
 };
 
 export default function RootLayout({

@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { useDeferredValue, useEffect, useMemo, useState } from "react";
 import { AreaProgressBar } from "./ProgressBar";
 import { UploadModal, type UploadResult } from "./UploadModal";
@@ -493,16 +492,6 @@ export default function AppPrototypePage() {
 
   return (
     <div className="min-h-screen bg-[var(--paper)] text-[var(--ink)]">
-      <div className="border-b border-[var(--leaf)]/30 bg-[var(--forest)] px-4 py-2 text-center text-sm text-[var(--mist)]">
-        Prototipo en vivo · la Aplicación evoluciona con cada update ·{" "}
-        <Link
-          href="/"
-          className="ml-1 inline-flex touch-manipulation rounded-full bg-[#2563eb] px-3 py-1 text-xs font-semibold text-white no-underline"
-        >
-          Volver al sitio
-        </Link>
-      </div>
-
       <div className="border-b border-[var(--ink)]/8 bg-white px-4 py-4 md:px-8">
         <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
           <div className="min-w-0 flex-1">
